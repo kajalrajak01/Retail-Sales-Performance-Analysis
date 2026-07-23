@@ -36,7 +36,7 @@ The retail business aims to improve sales performance and customer understanding
 |-----------|---------|
 | Dataset | Retail Sales Dataset |
 | Records | 1,000 |
-| Features | 16 (reduced after cleaning) |
+| Features | 16 |
 | Format | CSV |
 
 ---
@@ -47,27 +47,157 @@ The retail business aims to improve sales performance and customer understanding
 - PostgreSQL
 - SQL
 - Power BI
+- Git
+- GitHub
+
+---
+
+## Skills Demonstrated
+
+- Data Cleaning
+- Exploratory Data Analysis (EDA)
+- Feature Engineering
+- SQL Aggregations
+- Common Table Expressions (CTEs)
+- Window Functions
+- Data Visualization
+- Business Intelligence
+- Dashboard Design
 
 ---
 
 ## Project Workflow
 
-1. Imported the retail sales dataset into Python.
-2. Performed data cleaning and preprocessing.
-3. Handled missing values and standardized the dataset.
-4. Created additional features for analysis.
-5. Loaded the cleaned dataset into PostgreSQL.
-6. Performed Exploratory Data Analysis (EDA) using SQL.
-7. Built an interactive Power BI dashboard.
-8. Generated business insights and recommendations.
+### Import Dataset
+
+```python
+import pandas as pd
+
+df = pd.read_csv("Retail Sales Dataset.csv")
+```
+
+### Data Type Conversion
+
+```python
+invalid_dates = df[pd.to_datetime(df['date'], errors='coerce').isna()]
+```
+
+### Data Cleaning & Column Standardization
+
+```python
+df.columns = (
+    df.columns
+      .str.strip()
+      .str.lower()
+      .str.replace(" ", "_")
+)
+```
+
+### Feature Engineering
+
+```python
+df['year']  = df['date'].dt.year
+df['month'] = df['date'].dt.month
+```
+
+### Load data to PostgreSQL
+
+```python
+from sqlalchemy import create_engine
+from urllib.parse import quote_plus
+
+username = "postgres"
+password = quote_plus("YOUR_PASSWORD")
+host = "localhost"
+port = "5432"
+database = "retail_sales_market"
+
+engine = create_engine(
+    f"postgresql+psycopg2://{username}:{password}@{host}:{port}/{database}"
+)
+
+table_name = "retail_sales"
+
+df.to_sql(table_name, engine, if_exists="replace", index=False)
+
+print(f"Data successfully loaded into table '{table_name}' in database '{database}'.")
+```
+
+The cleaned dataset was imported into PostgreSQL, where SQL was used to answer key business questions related to sales performance, customer behavior, and product trends.
+
+### Exploratory Data Analysis (SQL)
+
+#### Monthly Sales Performance
+```sql
+SELECT
+	year,
+	month,
+	SUM(total_amount) AS total_revenue,
+	COUNT(order_id) AS total_orders,
+	SUM(quantity) AS total_items_sold
+FROM retail_sales
+GROUP BY year, month
+ORDER BY year ASC, month ASC;
+```
+
+#### Product Category Sales Percentage
+```sql
+WITH cat_sales AS (
+	SELECT 
+		product_category,
+		SUM(total_amount) AS category_sales
+	FROM retail_sales
+	GROUP BY product_category
+)
+SELECT 
+	product_category,
+	category_sales,
+	ROUND(( 100.0 * category_sales / SUM(category_sales) OVER())::numeric, 2) AS sales_percentage
+FROM cat_sales
+ORDER BY category_sales DESC;
+```
+
+#### Top Revenue by Customer Segment & Age Group
+```sql
+WITH demographic_sales AS (
+	SELECT 
+		gender,
+		age_group,
+		SUM(total_amount) AS total_revenue,
+		COUNT(DISTINCT order_id) AS total_orders
+FROM retail_sales
+GROUP BY gender, age_group
+ORDER BY total_revenue DESC
+),
+ranked_sales AS (
+	SELECT *,
+		ROW_NUMBER() OVER (PARTITION BY gender ORDER BY total_revenue DESC) AS rn
+	FROM demographic_sales
+)
+SELECT gender, age_group, total_orders, total_revenue
+FROM ranked_sales
+WHERE rn = 1
+ORDER BY total_revenue DESC;
+```
+> **Note:** The complete set of SQL queries is available in [Retail_Sales_Performance_Analysis.sql](Retail_Sales_Performance_Analysis.sql)
 
 ---
 
-## Dashboard
+## Power BI Dashboard
+
+The interactive dashboard provides an overview of sales performance through KPIs, sales trends, regional analysis, product category performance, and dynamic filters for business exploration.
 
 > **Dashboard Preview**
 
-![Retail Sales Dashboard](dashboard.png)
+![Retail Sales Dashboard](Dashboard/dashboard.png)
+
+---
+
+## Project Report
+
+A detailed report summarizing the project methodology, analysis, dashboard, insights, and recommendations is included in this repository.
+
+📄 **View Report:** [Retail_Sales_Report.pdf](Retail_Sales_Report.pdf)
 
 ---
 
@@ -97,8 +227,11 @@ This project demonstrates practical skills in **data cleaning, SQL-based analysi
 
 ---
 
+This repository includes the complete project notebook, SQL scripts, Power BI dashboard, project report, dataset, and supporting documentation.
+
 ## 📁 Project Structure
 
+```text
 Retail-Sales-Performance-Analysis/
 │
 ├── README.md
@@ -107,8 +240,9 @@ Retail-Sales-Performance-Analysis/
 ├── Retail_Sales_Performance_Analysis.ipynb
 ├── Retail_Sales_Performance_Analysis.sql
 │
-└── dashboard/
+└── Dashboard/
     ├── Retail_Sales_Dashboard.pbix
     └── dashboard.png
+```
 
 **Author:** Kajal Rajak
