@@ -234,15 +234,15 @@ This repository includes the complete project notebook, SQL scripts, Power BI da
 ```text
 Retail-Sales-Performance-Analysis/
 │
+├── Dashboard/
+│   ├── Retail_Sales_Dashboard.pbix
+│   └── dashboard.png
+│
 ├── README.md
-├── Retail_Sales_Report.pdf
 ├── Retail_Sales_Dataset.csv
 ├── Retail_Sales_Performance_Analysis.ipynb
 ├── Retail_Sales_Performance_Analysis.sql
-│
-└── Dashboard/
-    ├── Retail_Sales_Dashboard.pbix
-    └── dashboard.png
+└── Retail_Sales_Report.pdf
 ```
 
 **Author:** Kajal Rajak
